@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "display_helpers.h"
+#include "playerDataStruct.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ string RightCenterField = "RCF";
 // Misc positions //
 string Out = "Out";
 
-void determineFieldPosition(PlyData* Data, string* displayArrayPar, unsigned short int plyCount)
+void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], unsigned short int plyCount)
 {
     string infieldPositions[] = {Pitcher, Catcher, FirstBase, SecondBase, ThirdBase, ShortStop};
     string outfieldPositions[] = {LeftField, CenterField, RightField, LeftCenterField, RightCenterField};
@@ -59,7 +60,25 @@ void determineFieldPosition(PlyData* Data, string* displayArrayPar, unsigned sho
     {
         for (unsigned short int player = 0; player < plyCount; player++)
         {
+            if (inning == 0)
+            {
+                displayArrayPar[player][inning] = Data[player].name;
+            }
+
             
         }
+    }
+}
+
+void displayPlayerData(string displayArray[][6], unsigned short int plyCount)
+{
+    for (unsigned short int i = 0; i < plyCount; i++)
+    {
+        cout << displayArray[i][0] << " ";
+        for (unsigned short int j = 1; j < 6; j++)
+        {
+            cout << displayArray[i][j] << " ";
+        }
+        cout << endl;
     }
 }
