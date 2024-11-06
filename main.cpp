@@ -1,23 +1,21 @@
 #include <iostream>
 #include <string>
-#include <math.h>
-#include <ctime>
 
 #include "includes/display_helpers.h"
 #include "includes/playerDataStruct.h"
 
 using namespace std;
 
-unsigned short int const PLAYER_COUNT = 12;
+int const PLAYER_COUNT = 12;
 
 int main()
 {
-    static PlyData PlayerData[PLAYER_COUNT];
+    static PlyData PlayerData[PLAYER_COUNT-1];
 
     cout << "Enter " << PLAYER_COUNT << " player names: " << endl;
     printChar('-', 25);
 
-    for (unsigned short int i = 0; i < PLAYER_COUNT; i++)
+    for (int i = 0; i < PLAYER_COUNT; i++)
     {
         cout << "What is player " << (i + 1) << "'s name: ";
         getline(cin, PlayerData[i].name);
@@ -26,7 +24,7 @@ int main()
     cout << endl << "Enter the batting average for each player (0-1000):" << endl;
     printChar('-', 52);
 
-    for (unsigned short int i = 0; i < PLAYER_COUNT; i++)
+    for (int i = 0; i < PLAYER_COUNT; i++)
     {
         string value;
 
@@ -49,10 +47,9 @@ int main()
     cout << endl << "Game lineup and field positions: " << endl;
     printChar('-', 34);
 
-    string displayArray[PLAYER_COUNT][6]; // 0 is name, the rest is position by inning
+    string displayArray[PLAYER_COUNT-1][6]; // 0 is name, the rest is position by inning
 
     determineFieldPosition(PlayerData, displayArray, PLAYER_COUNT);
-
     displayPlayerData(displayArray, PLAYER_COUNT);
 
     return 0;

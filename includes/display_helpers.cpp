@@ -5,20 +5,20 @@
 
 using namespace std;
 
-void printChar(char charPar, unsigned short int count)
+void printChar(char charPar, int count)
 {
-    for (unsigned short int i = 0; i < count; i++)
+    for ( int i = 0; i < count; i++)
     {
         cout << charPar;
     }
     cout << endl;
 }
 
-void sortPlayerData(PlyData *Data, unsigned short int plyCount) // bubble sort because I was to tired to figure out how to use a fancy method like quick sort
+void sortPlayerData(PlyData *Data,  int plyCount) // bubble sort because I was to tired to figure out how to use a fancy method like quick sort
 {
-    for (unsigned short int i = 0; i < plyCount - 1; i++)
+    for ( int i = 0; i < plyCount - 1; i++)
     {
-        for (unsigned short int j = 0; j < plyCount - i - 1; j++)
+        for ( int j = 0; j < plyCount - i - 1; j++)
         {
             if (Data[j].battingPerc < Data[j + 1].battingPerc)
             {
@@ -31,24 +31,24 @@ void sortPlayerData(PlyData *Data, unsigned short int plyCount) // bubble sort b
 // Position abbreviations //
 
 // Infield positions //
-string Pitcher = "P";
-string Catcher = "C";
-string FirstBase = "1B";
-string SecondBase = "2B";
-string ThirdBase = "3B";
-string ShortStop = "SS";
+const string Pitcher = "P";
+const string Catcher = "C";
+const string FirstBase = "1B";
+const string SecondBase = "2B";
+const string ThirdBase = "3B";
+const string ShortStop = "SS";
 
 // Outfield positions //
-string LeftField = "LF";
-string CenterField = "CF";
-string RightField = "RF";
-string LeftCenterField = "LCF";
-string RightCenterField = "RCF";
+const string LeftField = "LF";
+const string CenterField = "CF";
+const string RightField = "RF";
+const string LeftCenterField = "LCF";
+const string RightCenterField = "RCF";
 
 // Misc positions //
-string Out = "Out";
+const string Out = "Out";
 
-void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], unsigned short int plyCount)
+void determineFieldPosition(PlyData* Data, string displayArrayPar[][6],  int plyCount)
 {
     string infieldPositions[] = {Pitcher, Catcher, FirstBase, SecondBase, ThirdBase, ShortStop};
     string outfieldPositions[] = {LeftField, CenterField, RightField, LeftCenterField, RightCenterField};
@@ -56,13 +56,14 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], unsigned
     bool outfieldAssigned[12] = {false}; // keeps track of which outfield positions are assigned
     int sitOutCount[12] = {0}; // keeps track of how many times a player has sat out
 
-    for (unsigned short int inning = 0; inning <= 5; inning++)
+    for ( int inning = 0; inning <= 5; inning++)
     {
-        for (unsigned short int player = 0; player < plyCount; player++)
+        for ( int player = 0; player < plyCount; player++)
         {
             if (inning == 0)
             {
                 displayArrayPar[player][inning] = Data[player].name;
+                continue; // first item in list is name so we skip it basically
             }
 
             
@@ -70,15 +71,44 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], unsigned
     }
 }
 
-void displayPlayerData(string displayArray[][6], unsigned short int plyCount)
+const int BUFFER_SPACE = 4; // spaces between columns (should be longer than longest position name)
+
+void displayPlayerData(string displayArray[][6],  int plyCount)
 {
-    for (unsigned short int i = 0; i < plyCount; i++)
+    for ( int i = 0; i < plyCount; i++)
     {
-        cout << displayArray[i][0] << " ";
-        for (unsigned short int j = 1; j < 6; j++)
+        cout << "Game Lineup and field positions:" << endl;
+        printChar('-', 33);
+
+        int longestName = 0;
+        for ( int j = 0; j < 12; j++)
         {
-            cout << displayArray[i][j] << " ";
+            if (displayArray[j][0].length() > longestName)
+            {
+                longestName = displayArray[j][0].length();
+            }
+        }
+
+        cout << "Name";
+        printChar(' ', longestName + BUFFER_SPACE - 4);
+        for ( int j = 1; j <= 5; j++)
+        {
+            cout << "Inning " << j;
+            printChar(' ', BUFFER_SPACE);
         }
         cout << endl;
+
+        for (int j = 0; j < plyCount; j++)
+        {
+            cout << displayArray[j][0];
+            printChar(' ', longestName + BUFFER_SPACE - displayArray[j][0].length());
+            for (int k = 1; k <= 5; k++)
+            {
+                cout << displayArray[j][k];
+                printChar(' ', BUFFER_SPACE);
+            }
+            cout << endl;
+        }
+        
     }
 }
