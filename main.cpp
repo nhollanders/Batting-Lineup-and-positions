@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <ctime>
+#include <random>
 
 #include "includes/display_helpers.h"
 #include "includes/playerDataStruct.h"
@@ -10,10 +12,13 @@ int const PLAYER_COUNT = 12;
 
 int main()
 {
-    static PlyData PlayerData[PLAYER_COUNT-1];
+    srand(time(0)); // seed random number generator
+
+    static PlyData PlayerData[PLAYER_COUNT];
 
     cout << "Enter " << PLAYER_COUNT << " player names: " << endl;
     printChar('-', 25);
+    cout << endl;
 
     for (int i = 0; i < PLAYER_COUNT; i++)
     {
@@ -23,6 +28,7 @@ int main()
 
     cout << endl << "Enter the batting average for each player (0-1000):" << endl;
     printChar('-', 52);
+    cout << endl;
 
     for (int i = 0; i < PLAYER_COUNT; i++)
     {
@@ -41,13 +47,11 @@ int main()
             PlayerData[i].battingPerc = 0;
         }
     }
+    cout << endl;
 
     sortPlayerData(PlayerData, PLAYER_COUNT); // sorts from highest to lowest score
 
-    cout << endl << "Game lineup and field positions: " << endl;
-    printChar('-', 34);
-
-    string displayArray[PLAYER_COUNT-1][6]; // 0 is name, the rest is position by inning
+    string displayArray[PLAYER_COUNT][6]; // 0 is name, the rest is position by inning
 
     determineFieldPosition(PlayerData, displayArray, PLAYER_COUNT);
     displayPlayerData(displayArray, PLAYER_COUNT);
