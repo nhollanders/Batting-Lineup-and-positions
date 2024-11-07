@@ -12,8 +12,6 @@ int const PLAYER_COUNT = 12;
 
 int main()
 {
-    srand(time(0)); // seed random number generator
-
     static PlyData PlayerData[PLAYER_COUNT];
 
     cout << "Enter " << PLAYER_COUNT << " player names: " << endl;
