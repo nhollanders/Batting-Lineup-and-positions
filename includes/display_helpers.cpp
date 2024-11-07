@@ -73,11 +73,13 @@ bool isPositionUsed(string position, string displayArrayPar[][6], int inning)
     return false;
 }
 
-void determineFieldPosition(PlyData* Data, string displayArrayPar[][6],  int plyCount)
+void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], int plyCount)
 {
     vector<string> Infield_Positions(INFIELD_POSITIONS, INFIELD_POSITIONS + 6);
     vector<string> Outfield_Positions(OUTFIELD_POSITIONS, OUTFIELD_POSITIONS + 5);
-    bool hasSatOut[plyCount] = {false};
+    bool hasSatOut[plyCount] = {false};  // Track who has sat out
+    bool availiblePlayers[plyCount] = {false}; // Track who is available to play
+    bool playerAssigned[plyCount] = {false};  // Track if a player has been assigned a position in an inning
 
     random_device rd;
     mt19937 gen(rd());
@@ -86,48 +88,132 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6],  int ply
     {
         shuffle(Infield_Positions.begin(), Infield_Positions.end(), gen);
         shuffle(Outfield_Positions.begin(), Outfield_Positions.end(), gen);
+        
         int satOutPlayers = 0;
 
+        // Randomly sit people who haven't sat before
         for (int player = 0; player < plyCount; player++)
         {
-            if (inning == 0)
+            if (!hasSatOut[player])
+            {
+                availiblePlayers[player] = true;
+            }
+            else
+            {
+                availiblePlayers[player] = false;
+            }
+        }
+
+        shuffle(availiblePlayers, availiblePlayers + plyCount, gen);
+
+        // Sit out extra players who need to be benched
+        for (int player = 0; player < plyCount; player++)
+        {
+            if (availiblePlayers[player] && satOutPlayers < abs(plyCount - 11) + 1) // Bench players if there are more than 11
+            {
+                displayArrayPar[player][inning] = BENCH;
+                hasSatOut[player] = true;
+                satOutPlayers++;
+            }
+        }
+
+        // Assign positions
+        vector<bool> positionUsedInInning(11, false); // Track used positions for this inning
+
+        // Assign positions to players
+        for (int player = 0; player < plyCount; player++)
+        {
+            if (inning == 0) // First inning special case, just assign player names
             {
                 displayArrayPar[player][inning] = Data[player].name;
                 continue;
             }
 
-            // if player has sat out, put them on the bench
-            if (rand() % 2 == 0 && !hasSatOut[player] && satOutPlayers < abs(plyCount - 11)) // we only have 11 positions to assign so extra players get sat out
-            {
-                displayArrayPar[player][inning] = BENCH;
-                hasSatOut[player] = true;
-                satOutPlayers++;
-                continue;
-            }
+            bool positionAssigned = false;
 
-            // if it is inning 1 and not 0:
-            if (rand() % 2 == 0) // infield
+            // Try to assign an infield or outfield position
+            if (rand() % 2 == 0) // Assign infield
             {
-                for (int inPos = 0; inPos < 6; inPos++) // for each infield position
+                for (int inPos = 0; inPos < 6; inPos++) // Iterate through infield positions
                 {
                     string position = Infield_Positions[inPos];
-                    if (!hasPlayedPos(player, position, displayArrayPar) && !isPositionUsed(position, displayArrayPar, inning)) // if hasnt played and position isnt being used
+                    if (!hasPlayedPos(player, position, displayArrayPar) && !isPositionUsed(position, displayArrayPar, inning) && !positionUsedInInning[inPos])
                     {
                         displayArrayPar[player][inning] = position;
+                        positionUsedInInning[inPos] = true;
+                        positionAssigned = true;
                         break;
                     }
                 }
             }
-            else // outfield
+            else // Assign outfield
             {
-                for (int outPos = 0; outPos < 5; outPos++)
+                for (int outPos = 0; outPos < 5; outPos++) // Iterate through outfield positions
                 {
                     string position = Outfield_Positions[outPos];
-                    if (!hasPlayedPos(player, position, displayArrayPar) && !isPositionUsed(position, displayArrayPar, inning))
+                    if (!hasPlayedPos(player, position, displayArrayPar) && !isPositionUsed(position, displayArrayPar, inning) && !positionUsedInInning[outPos])
                     {
                         displayArrayPar[player][inning] = position;
+                        positionUsedInInning[outPos] = true;
+                        positionAssigned = true;
                         break;
                     }
+                }
+            }
+
+            // If no position was assigned (i.e., the player is unassigned), attempt to assign or swap
+            if (!positionAssigned)
+            {
+                // Find a player who is already on the bench and swap them
+                bool swapped = false;
+                for (int playerToSwap = 0; playerToSwap < plyCount; playerToSwap++)
+                {
+                    if (displayArrayPar[playerToSwap][inning] == BENCH && !hasSatOut[playerToSwap]) // Ensure the player is not already out
+                    {
+                        // Swap the unassigned player with the bench player
+                        swap(displayArrayPar[playerToSwap][inning], displayArrayPar[player][inning]);
+
+                        // Mark both players as assigned
+                        hasSatOut[player] = true;
+                        hasSatOut[playerToSwap] = true;
+                        swapped = true;
+                        break;
+                    }
+                }
+
+                // If no swap was made, assign them a fallback position (avoid overlap)
+                if (!swapped)
+                {
+                    // Try to assign a unique infield position
+                    for (int i = 0; i < plyCount; i++)
+                    {
+                        string position = Infield_Positions[i % 6]; // Use modulus to cycle through positions
+                        if (!hasPlayedPos(player, position, displayArrayPar) && !isPositionUsed(position, displayArrayPar, inning))
+                        {
+                            displayArrayPar[player][inning] = position;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Ensure that no player is left without a position
+            if (!positionAssigned && displayArrayPar[player][inning] == "")
+            {
+                // Assign a fallback position if needed
+                for (int inPos = 0; inPos < 6; inPos++)
+                {
+                    if (!hasPlayedPos(player, Infield_Positions[inPos], displayArrayPar) && !isPositionUsed(Infield_Positions[inPos], displayArrayPar, inning))
+                    {
+                        displayArrayPar[player][inning] = Infield_Positions[inPos];
+                        break;
+                    }
+                }
+
+                // Ensure no player stays without a position
+                if (displayArrayPar[player][inning] == "")
+                {
+                    displayArrayPar[player][inning] = "UNKNOWN"; // Fallback if no valid position found
                 }
             }
         }
