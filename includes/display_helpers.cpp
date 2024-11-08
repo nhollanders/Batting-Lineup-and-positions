@@ -62,7 +62,11 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], int plyC
     int numInfield = sizeof(INFIELD_POSITIONS) / sizeof(INFIELD_POSITIONS[0]);
     int numOutfield = sizeof(OUTFIELD_POSITIONS) / sizeof(OUTFIELD_POSITIONS[0]);
 
-    // Track positions played by each player
+    for (int i = 0; i < plyCount; i++) {
+        displayArrayPar[i][0] = Data[i].name; // assign names to the first array slot
+    }
+
+    // Track positions played by each player (to minimize repeats)
     vector<vector<string>> playedPositions(plyCount);
 
     // Helper variables to ensure rules are followed
@@ -98,9 +102,20 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], int plyC
                 continue;
             }
 
-            // Assign infield positions if player hasn't played one yet
+            // Assign infield positions first if player hasn't played one yet
             if (infieldCount[i] < 1 && currentInfield < numInfield) {
                 string position = infieldPositions[currentInfield];
+
+                // Check if player has already played this position before
+                if (hasPlayedPosition(playedPositions[i], position)) {
+                    // Try to find an alternative infield position
+                    for (const auto& altPosition : infieldPositions) {
+                        if (!hasPlayedPosition(playedPositions[i], altPosition)) {
+                            position = altPosition;
+                            break;
+                        }
+                    }
+                }
 
                 // Assign catcher only once
                 if (position == "C" && catcherCount[i] == 0) {
@@ -114,22 +129,37 @@ void determineFieldPosition(PlyData* Data, string displayArrayPar[][6], int plyC
                 infieldCount[i]++;
                 currentInfield++;
             } 
-            // Assign outfield positions
+            // Assign outfield positions if infield is full
             else if (currentOutfield < numOutfield) {
                 string position = outfieldPositions[currentOutfield];
+
+                // Check if player has already played this outfield position
+                if (hasPlayedPosition(playedPositions[i], position)) {
+                    // Try to find an alternative outfield position
+                    for (const auto& altPosition : outfieldPositions) {
+                        if (!hasPlayedPosition(playedPositions[i], altPosition)) {
+                            position = altPosition;
+                            break;
+                        }
+                    }
+                }
+
                 displayArrayPar[i][inning] = position;
                 playedPositions[i].push_back(position);
                 currentOutfield++;
-            } else if (currentInfield < numInfield) {
-                // If outfield is full, assign remaining players to infield
-                string position = infieldPositions[currentInfield];
-                displayArrayPar[i][inning] = position;
-                currentInfield++;
-            } else if (currentOutfield < numOutfield) {
-                // Ensure remaining players are given outfield positions if available
-                string position = outfieldPositions[currentOutfield];
-                displayArrayPar[i][inning] = position;
-                currentOutfield++;
+            }
+        }
+
+        // Ensure all players have been assigned a position. If any players were not assigned, give them a fallback position.
+        for (int i = 0; i < plyCount; i++) {
+            if (displayArrayPar[i][inning].empty()) {
+                if (currentInfield < numInfield) {
+                    displayArrayPar[i][inning] = infieldPositions[currentInfield++];
+                } else if (currentOutfield < numOutfield) {
+                    displayArrayPar[i][inning] = outfieldPositions[currentOutfield++];
+                } else {
+                    displayArrayPar[i][inning] = BENCH;  // Fallback if all else fails
+                }
             }
         }
     }
