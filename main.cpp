@@ -54,5 +54,6 @@ int main()
     determineFieldPosition(PlayerData, displayArray, PLAYER_COUNT);
     displayPlayerData(displayArray, PLAYER_COUNT);
 
+    system("pause");
     return 0;
 }
